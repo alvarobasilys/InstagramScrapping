@@ -9,11 +9,10 @@ from absl import app,flags,logging
 from tqdm import tqdm
 
 class InstagramScrapping:
-    def __init__(self,login,webdriver_dir,targetLink,load_loop = 1,login_delay = 3.0,load_delay = 3.0,crawl_delay = 0.5):
+    def __init__(self,login,targetLink,load_loop = 1,login_delay = 3.0,load_delay = 1.0,crawl_delay = 1.0):
         '''
         parameter:
             login (tuple/list) : (username,password) #You need to login to instagram
-            webdriver_dir (string) : webdriver location (Make sure its Windows Edge webdriver!, if you using another webdriver, just change line 17) 
             targetLink (string) : instagram account link
             load_loop (int) : how far you going to load the Instagram feed.
             load_delay (float) : delay time of action before crawling.
@@ -21,8 +20,7 @@ class InstagramScrapping:
         '''
         self.login = login
         logging.info('Load Driver. . .')
-        self.driver = webdriver.Edge(executable_path=webdriver_dir)
-        logging.info('    Path         :'+webdriver_dir)
+        self.driver = webdriver.Edge(executable_path='msedgedriver.exe')
 
         self.driver.get(targetLink)
         self.driver.find_element_by_css_selector("button.sqdOP.L3NKy.y3zKF").click()
@@ -54,7 +52,7 @@ class InstagramScrapping:
 
             # Calculate new scroll height and compare with last scroll height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
-            if new_height == last_height:
+            if new_height == last_height and x == load_loop:
                 break
             last_height = new_height
         self.driver.execute_script("window.scrollTo(0,0)")
@@ -186,12 +184,11 @@ class InstagramScrapping:
 
 FLAGS = flags.FLAGS
 flags.DEFINE_list('user_info',['user','pass'],'Your instagram username "Username","Password"')
-flags.DEFINE_string('webdriver','./msedgedriver.exe','Webdriver path')
-flags.DEFINE_string('targetLink','https://www.instagram.com/explore/tags/playstation/','Webdriver path')
+flags.DEFINE_string('target_link','https://www.instagram.com/instagram/','URL Target')
 flags.DEFINE_integer('load_loop',1,'how far you going to load the Instagram feed')
 flags.DEFINE_float('login_delay',3.0,'delay time of action when log in')
-flags.DEFINE_float('load_delay',2.0,'delay time of action when load timeline')
-flags.DEFINE_float('crawl_delay',0.5,'delay time when load instagram post')
+flags.DEFINE_float('load_delay',1.0,'delay time of action when load timeline')
+flags.DEFINE_float('crawl_delay',1.0,'delay time when load instagram post')
 flags.DEFINE_string('csv_path','instagram.csv','path for csv')
 
 
@@ -199,7 +196,7 @@ flags.DEFINE_string('csv_path','instagram.csv','path for csv')
 def main(argv):
     logging.get_absl_handler().setFormatter(None)
     logging.info('Interesting Stuff')
-    scrap = InstagramScrapping(FLAGS.user_info,FLAGS.webdriver,FLAGS.targetLink,FLAGS.load_loop,FLAGS.login_delay,FLAGS.load_delay,FLAGS.crawl_delay)
+    scrap = InstagramScrapping(FLAGS.user_info,FLAGS.target_link,FLAGS.load_loop,FLAGS.login_delay,FLAGS.load_delay,FLAGS.crawl_delay)
     scrap.toCSV(FLAGS.csv_path)
 
 if __name__ == '__main__':
